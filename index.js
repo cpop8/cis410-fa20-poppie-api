@@ -1,4 +1,5 @@
 const express = require('express')
+const bcrypt = require('hashing.js')
 const db = require('./dbConnectExec.js')
 
 const app = express();
@@ -9,8 +10,8 @@ app.get("/hi",(req,res)=>{
 })
 
 app.post("/patient", async (req,res)=>{
-    res.send("creating user")
-    console.log("request body", req.body)
+    //res.send("creating user")
+    //console.log("request body", req.body)
 
     var FName = req.body.FName;
     var LName = req.body.LName;
@@ -19,17 +20,24 @@ app.post("/patient", async (req,res)=>{
     var PhoneNumber = req.body.PhoneNumber;
     var VisitDate = req.body.VisitDate;
 
-    var DateOfBirthCheckQuery = `SELECT DateOfBirth
-    FROM patient
-    WHERE DateOfBirth = '${DateOfBirth}'`
-
-    var existingUser = await db.executeQuery(DateOfBirthCheckQuery)
-    
-    console.log("existing user", existingUser)
-    if(existingUser[0]){
-        return res.status(409).send('Please enter a different Date of Birth.')
+    if(!FName || !LName || !Address || !DateOfBirth || !PhoneNumber || !VisitDate){
+        return res.status(400).send("bad request")
     }
 
+    FName = FName.replace("'","''")
+    LName = LName.replace("'","''")
+    var PhoneNumberCheckQuery = `SELECT PhoneNumber
+    FROM patient
+    WHERE PhoneNumber = '${PhoneNumber}'`
+
+    var existingUser = await db.executeQuery(PhoneNumberCheckQuery)
+    
+    //console.log("existing user", existingUser)
+    if(existingUser[0]){
+        return res.status(409).send('Please enter a different phone number.')
+    }
+
+    var hashedPassword = bcrypt.hashSync(password)
     var insertQuery = `INSERT INTO patient(FName,LName,Address,DateOfBirth,PhoneNumber,VisitDate)
     VALUES('${FName}', '${LName}', '${Address}', '${DateOfBirth}', '${PhoneNumber}', '${VisitDate}')`
 
