@@ -8,43 +8,45 @@ app.get("/hi",(req,res)=>{
     res.send("hello world")
 })
 
-app.post("/contacts", async (req,res)=>{
+app.post("/patient", async (req,res)=>{
     res.send("creating user")
     console.log("request body", req.body)
 
-    var nameFirst = req.body.nameFirst;
-    var nameLast = req.body.nameLast;
-    var email = req.body.email;
-    var password = req.body.password;
+    var FName = req.body.FName;
+    var LName = req.body.LName;
+    var Address = req.body.Address;
+    var DateOfBirth = req.body.DateOfBirth;
+    var PhoneNumber = req.body.PhoneNumber;
+    var VisitDate = req.body.VisitDate;
 
-    var emailCheckQuery = `SELECT email
-    FROM contact
-    WHERE email = '${email}'`
+    var DateOfBirthCheckQuery = `SELECT DateOfBirth
+    FROM patient
+    WHERE DateOfBirth = '${DateOfBirth}'`
 
-    var existingUser = await db.executeQuery(emailCheckQuery)
+    var existingUser = await db.executeQuery(DateOfBirthCheckQuery)
     
     console.log("existing user", existingUser)
     if(existingUser[0]){
-        return res.status(409).send('Please enter a different email.')
+        return res.status(409).send('Please enter a different Date of Birth.')
     }
 
-    var insertQuery = `INSERT INTO contact(NameFirst,NameLast,Email,Password)
-    VALUES('${nameFirst}', '${nameLast}', '${email}', '${password}')`
+    var insertQuery = `INSERT INTO patient(FName,LName,Address,DateOfBirth,PhoneNumber,VisitDate)
+    VALUES('${FName}', '${LName}', '${Address}', '${DateOfBirth}', '${PhoneNumber}', '${VisitDate}')`
 
     db.executeQuery(insertQuery)
     .then(()=>{res.status(201).send()})
     .catch((err)=>{
-        console.log("error in POST /contacts", err)
+        console.log("error in POST /patient", err)
         res.status(500).send()
     })
 })
 
-app.get("/movies", (req,res)=>{
+app.get("/appointment", (req,res)=>{
     //get data from database
     db.executeQuery(`SELECT * 
-    FROM movie 
-    LEFT JOIN genre 
-    ON genre.genrePK = movie.GenreFK`)
+    FROM appointment 
+    LEFT JOIN patient 
+    ON patient.patientPK = appointment.PatientFK`)
     .then((result)=>{
         res.status(200).send(result)
     })
@@ -53,26 +55,26 @@ app.get("/movies", (req,res)=>{
         res.status(500).send()
     })
 })
-app.get("/movies/:pk", (req, res)=>{
+app.get("/appointment/:pk", (req, res)=>{
     var pk = req.params.pk
     //console.log("my PK:", pk)
 
     var myQuery = `SELECT * 
-    FROM movie 
-    LEFT JOIN genre 
-    ON genre.genrePK = movie.GenreFK
-    WHERE moviePK = ${pk}`
+    FROM appointment 
+    LEFT JOIN patient 
+    ON patient.patientPK = appointment.PatientFK
+    WHERE appointmentPK = ${pk}`
 
     db.executeQuery(myQuery)
-    .then((movies)=>{
+    .then((appointment)=>{
        // console.log("Movies: ", movies)
 
-       if(movies[0]){
-           res.send(movies[0])
+       if(appointment[0]){
+           res.send(appointment[0])
        }else{res.status(404).send('bad request')}
     })
     .catch((err)=>{
-        console.log("Error in /movies/pk", err)
+        console.log("Error in /appointment/pk", err)
         res.status(500).send()
     })
 })

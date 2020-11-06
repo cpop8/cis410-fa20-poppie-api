@@ -1,11 +1,11 @@
 const sql = require('mssql')
-const rockwellConfig = require('./config.js')
+const poppieConfig = require('./config.js')
 
 const config = {
-    user: rockwellConfig.DB.user,
-    password: rockwellConfig.DB.password,
-    server: rockwellConfig.DB.server,
-    database: rockwellConfig.DB.database,
+    user: poppieConfig.DB.user,
+    password: poppieConfig.DB.password,
+    server: poppieConfig.DB.server,
+    database: poppieConfig.DB.database,
 }
 
     async function executeQuery(aQuery){
