@@ -1,5 +1,5 @@
 const express = require('express')
-//const bcrypt = require('bcryptjs')
+const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const cors = require('cors')
 
@@ -12,12 +12,16 @@ const app = express();
 app.use(express.json())
 app.use(cors())
 
+app.post('doctor/logout', auth, (req,res)=>{
+
+})
+
 //const auth = async(req, res, next)=>{
     //console.log(req.header('Authorization'))
     //next()
 //}
 
-app.post("/procedure", auth, (req,res)=>{
+app.post("/procedure", auth, async (req,res)=>{
     try{
     var PatientFK = req.body.PatientFK;
     var TestName = req.body.TestName;
@@ -34,7 +38,7 @@ app.post("/procedure", auth, (req,res)=>{
     OUTPUT inserted.PatientPK, inserted.TestName, inserted.TestDate, inserted.Cost, inserted.DoctorPK
     VALUES('${TestName}','${TestDate}','${Cost}','${PatientFK}', ${req.patient.PatientFK})`
 
-    let insertedPatient = dbexecuteQuery(insertQuery)
+    let insertedPatient = await dbexecuteQuery(insertQuery)
     //console.log(insertedPatient)
     res.status(201).send(insertedPatient[0])
 }
@@ -44,8 +48,8 @@ app.post("/procedure", auth, (req,res)=>{
     }
 })
 
-app.get('/patient/me', auth, (req,res)=>{
-    res.send(req.patient)
+app.get('/doctor/me', auth, (req,res)=>{
+    res.send(req.doctor)
 })
 
 
@@ -53,49 +57,49 @@ app.get("/hi",(req,res)=>{
     res.send("hello world")
 })
 
-app.post("/patient/login", async (req,res)=>{
-   // console.log(req.body)
+app.post("/doctor/login", async (req,res)=>{
+    console.log(req.body)
 
-    var DateOfBirth = req.body.DateOfBirth;
-    var PhoneNumber = req.body.PhoneNumber;
+    var Email = req.body.Email;
+    var Password = req.body.Password;
 
-    if(!DateOfBirth || !PhoneNumber){
+    if(!Email || !Password){
         return res.status(400).send("bad request")
     }
 
-    //1. check that user DOB exists in database
+    //1. check that users email exists in database
     var query = `SELECT *
-    FROM Patient
-    WHERE DateOfBirth = '${DateOfBirth}'`
+    FROM Doctor
+    WHERE Email = '${Email}'`
     let result;
 
     try{
         result = await db.executeQuery(query);
     }catch(myError){
-        console.log('error in /patient/login:', myError)
+        console.log('error in /doctor/login:', myError)
         return res.status(500).send()
     }
     //console.log(result)
 
-    //2. check that phone number matches
+    //2. check that password matches
 
     let user = result[0]
-    //console.log(user)
+    console.log(user)
 
-    if(!bcrypt.compareSync(PhoneNumber,user.PhoneNumber)){
-        console.log("invalid phone number");
+    if(!bcrypt.compareSync(Password,user.Password)){
+        console.log("invalid password");
         return res.status(400).send("Invalid user credentials")
     }
 
     //3. generate a token
 
-    let token = jwt.sign({pk: user.PatientPK}, config.jwt, {expiresIn: '60 minutes'})
+    let token = jwt.sign({pk: user.DoctorPK}, config.jwt, {expiresIn: '60 minutes'})
     console.log(token)
 
     //4. save token in database and send token and user info back to user
-    let setTokenQuery = `UPDATE Patient
+    let setTokenQuery = `UPDATE Doctor
     SET Token = '${token}'
-    WHERE PatientPK = ${user.PatientPK}`
+    WHERE DoctorPK = ${user.DoctorPK}`
 
     try{
         await db.executeQuery(setTokenQuery)
@@ -105,8 +109,8 @@ app.post("/patient/login", async (req,res)=>{
             user: {
                 FName: user.FName,
                 LName: user.LName,
-                PhoneNumber: user.PhoneNumber,
-                PatientPK: user.PatientPK
+                Email: user.Email,
+                DoctorPK: user.DoctorPK
             }
         })
     }
@@ -115,37 +119,39 @@ app.post("/patient/login", async (req,res)=>{
         res.status(500).send()
     }
 
-    app.post("/patient", async (req,res)=>{
+    app.post("/doctor", async (req,res)=>{
         //res.send("creating user")
-        //console.log(req.body)
+        console.log("request body", req.body)
         var FName = req.body.FName;
         var LName = req.body.LName;
-        var Address = req.body.Address;
-        var PhoneNumber = req.body.PhoneNumber;
-        var DateOfBirth = req.body.DateOfBirth;
-        var VisitDate = req.body.VisitDate;
+        var Email = req.body.Email;
+        var Password = req.body.Password;
     
+        if(!FName || !LName || !Email || !Password){
+            return res.status(400).send("bad request")
+        }
     FName = FName.replace("'","''")
     LName = LName.replace("'","''")
-    var PhoneNumberCheckQuery = `SELECT PhoneNumber
-    FROM patient
-    WHERE PhoneNumber = '${PhoneNumber}'`
 
-    var existingUser = await db.executeQuery(PhoneNumberCheckQuery)
+    var EmailCheckQuery = `SELECT Email
+    FROM Doctor
+    WHERE Email = '${Email}'`
+
+    var existingUser = await db.executeQuery(EmailCheckQuery)
     
-    console.log("existing user", existingUser)
+    //console.log("existing user", existingUser)
     if(existingUser[0]){
-        return res.status(409).send('Please enter a different phone number.')
+        return res.status(409).send('Please enter a different email.')
     }
 
-    //var hashedPassword = bcrypt.hashSync(password)
-    var insertQuery = `INSERT INTO patient(FName,LName,Address,DateOfBirth,PhoneNumber,VisitDate)
-    VALUES('${FName}', '${LName}', '${Address}', '${DateOfBirth}', '${PhoneNumber}', '${VisitDate}')`
+    var hashedPassword = bcrypt.hashSync(Password)
+    var insertQuery = `INSERT INTO Doctor(FName,LName,Email,Password)
+    VALUES('${FName}', '${LName}', '${Email}', '${hashedPassword}')`
 
     db.executeQuery(insertQuery)
     .then(()=>{res.status(201).send()})
     .catch((err)=>{
-        console.log("error in POST /patient", err)
+        console.log("error in POST /doctor", err)
         res.status(500).send()
     })
 })

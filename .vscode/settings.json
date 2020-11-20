@@ -2,5 +2,7 @@
     "appService.zipIgnorePattern": [
         "node_modules{,/**}",
         ".vscode{,/**}"
-    ]
+    ],
+    "appService.defaultWebAppToDeploy": "/subscriptions/f1bc5ba6-cfa7-4dee-91ec-9ef618c2cbf2/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/cis410-fa20-poppie-api2",
+    "appService.deploySubpath": "."
 }

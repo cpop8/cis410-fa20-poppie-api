@@ -15,18 +15,18 @@ const auth = async(req, res, next)=>{
        let decodedToken = jwt.verify(myToken, config.JWT)
        console.log(decodedToken)
 
-       let PatientPK = decodedToken.pk;
-       console.log(PatientPK)
+       let DoctorPK = decodedToken.pk;
+       console.log(DoctorPK)
         //2. compare token with db token
-        let query = `SELECT PatientPK, FName, LName, DateOfBirth 
-        FROM Patient
-        WHERE PatientPK = ${PatientPK} and Token = '${myToken}'`
+        let query = `SELECT DoctorPK, FName, LName, Email 
+        FROM Doctor
+        WHERE DoctorPK = ${DoctorPK} and Token = '${myToken}'`
 
         let returnedUser = await db.executeQuery(query)
         //console.log(returnedUser)
         //3. save user information in request
         if(returnedUser[0]){
-            req.patient = returnedUser[0];
+            req.doctor = returnedUser[0];
             next()
         }
         else(res.status(401).send('Authentication failed.'))
