@@ -1,8 +1,8 @@
 const bcrypt = require('bcryptjs')
 
-var hashedPassword = bcrypt.hashSync('password1')
+var hashedPassword = bcrypt.hashSync('gaskp34')
 
 console.log(hashedPassword)
 
-var hashTest = bcrypt.compareSync('password1', hashedPassword)
+var hashTest = bcrypt.compareSync('gaskp34', hashedPassword)
 console.log(hashTest)

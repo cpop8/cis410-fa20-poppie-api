@@ -24,19 +24,19 @@ app.post('doctor/logout', auth, (req,res)=>{
 app.post("/procedure", auth, async (req,res)=>{
     try{
     var PatientFK = req.body.PatientFK;
-    var TestName = req.body.TestName;
-    var TestDate = req.body.TestDate;
+    var ProcedureName = req.body.ProcedureName;
+    var ProcedureDate = req.body.ProcedureDate;
     var Cost = req.body.Cost;
 
-    if(!PatientFK || !TestName || !TestDate || !Cost){res.status(400).send("bad request")}
-     TestName = TestName.replace("'","''")
+    if(!PatientFK || !ProcedureName || !ProcedureDate || !Cost){res.status(400).send("bad request")}
+     ProcedureName = ProcedureName.replace("'","''")
 
     //console.log("here is the patient in /procedure", req.patient)
     //res.send("here is your response")
 
-    let insertQuery = `INSERT INTO Procedure(TestName, TestDate, Cost, DoctorPK, PatientFK)
-    OUTPUT inserted.PatientPK, inserted.TestName, inserted.TestDate, inserted.Cost, inserted.DoctorPK
-    VALUES('${TestName}','${TestDate}','${Cost}','${PatientFK}', ${req.patient.PatientFK})`
+    let insertQuery = `INSERT INTO Procedure(ProcedureName, ProcedureDate, Cost, DoctorPK, PatientFK)
+    OUTPUT inserted.PatientPK, inserted.ProcedureName, inserted.ProcedureDate, inserted.Cost, inserted.DoctorPK
+    VALUES('${ProcedureName}','${ProcedureDate}','${Cost}','${PatientFK}', ${req.patient.PatientFK})`
 
     let insertedPatient = await dbexecuteQuery(insertQuery)
     //console.log(insertedPatient)
@@ -81,10 +81,12 @@ app.post("/doctor/login", async (req,res)=>{
     }
     //console.log(result)
 
+    if(!result[0]){return res.status(400).send('Invalid user credentials')}
+
     //2. check that password matches
 
     let user = result[0]
-    console.log(user)
+    //console.log(user)
 
     if(!bcrypt.compareSync(Password,user.Password)){
         console.log("invalid password");
@@ -98,7 +100,7 @@ app.post("/doctor/login", async (req,res)=>{
 
     //4. save token in database and send token and user info back to user
     let setTokenQuery = `UPDATE Doctor
-    SET Token = '${token}'
+    SET Token = '${Token}'
     WHERE DoctorPK = ${user.DoctorPK}`
 
     try{
@@ -139,7 +141,7 @@ app.post("/doctor/login", async (req,res)=>{
 
     var existingUser = await db.executeQuery(EmailCheckQuery)
     
-    //console.log("existing user", existingUser)
+    console.log("existing user", existingUser)
     if(existingUser[0]){
         return res.status(409).send('Please enter a different email.')
     }
