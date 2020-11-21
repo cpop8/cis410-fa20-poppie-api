@@ -13,7 +13,16 @@ app.use(express.json())
 app.use(cors())
 
 app.post('doctor/logout', auth, (req,res)=>{
+    var query = `UPDATE Doctor
+    SET Token = NULL
+    WHERE DoctorPK = ${req.doctor.DoctorPK}`
 
+    db.executeQuery(query)
+    .then(()=>{res.status(200).send()})
+    .catch((error)=>{
+        console.log("error on POST /doctor/logout", error)
+        res.status(500).send()
+    })
 })
 
 //const auth = async(req, res, next)=>{
@@ -49,9 +58,20 @@ app.post("/procedure", auth, async (req,res)=>{
 })
 
 app.get('/doctor/me', auth, (req,res)=>{
+    let DoctorPK = req.doctor.DoctorPK;
     res.send(req.doctor)
 })
 
+//app.patch("/doctor/:pk", auth, (req,res)=>{
+ ///   let doctorPK = req.params.pk
+    //make sure doctor can only enter information on patient
+
+//app.delete("/doctor/:pk", auth, (req,res)=>{
+    //    let doctorPK = req.params.pk
+        //make sure doctor can only enter information on patient
+//})
+
+app.get("/", (req,res)=>{res.send("Hello world.")})
 
 app.get("/hi",(req,res)=>{
     res.send("hello world")
